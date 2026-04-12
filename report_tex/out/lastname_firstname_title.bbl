@@ -1,0 +1,9 @@
+\begin{thebibliography}{1}
+\expandafter\ifx\csname natexlab\endcsname\relax\def\natexlab#1{#1}\fi
+
+\bibitem[{{OpenAI}(2024)}]{chatgpt}
+{OpenAI}. 2024.
+\newblock {ChatGPT: A Large-Scale Generative Model for Open-Domain Chat}.
+\newblock \url{https://github.com/openai/gpt-3}.
+
+\end{thebibliography}
