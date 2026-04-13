@@ -14,6 +14,7 @@ import matplotlib.pyplot as plt
 from datasets import load_dataset
 from huggingface_hub import hf_hub_download
 from llama_cpp import Llama
+from tqdm.auto import tqdm
 from transformers import pipeline
 
 
@@ -216,13 +217,13 @@ def load_kaggle_reviews_rows(max_samples: int, cache_dir: Path) -> list[dict]:
     return rows
 
 
-def evaluate_transformer(model_name: str, rows: list[dict]) -> tuple[float, float, list[dict]]:
+def evaluate_transformer(model_name: str, rows: list[dict], progress_label: str) -> tuple[float, float, list[dict]]:
     classifier = pipeline("sentiment-analysis", model=model_name)
     total_correct = 0
     total_latency = 0.0
     predictions = []
 
-    for row in rows:
+    for row in tqdm(rows, desc=progress_label, leave=False):
         start = time.perf_counter()
         output = classifier(row["text"], truncation=True)[0]
         latency = time.perf_counter() - start
@@ -249,13 +250,13 @@ def evaluate_transformer(model_name: str, rows: list[dict]) -> tuple[float, floa
     return accuracy, avg_latency, predictions
 
 
-def evaluate_llm(repo: str, filename: str, rows: list[dict]) -> tuple[float, float, list[dict]]:
+def evaluate_llm(repo: str, filename: str, rows: list[dict], progress_label: str) -> tuple[float, float, list[dict]]:
     llm = build_llm(repo_id=repo, filename=filename)
     total_correct = 0
     total_latency = 0.0
     predictions = []
 
-    for row in rows:
+    for row in tqdm(rows, desc=progress_label, leave=False):
         start = time.perf_counter()
         predicted, raw_output = llm_predict(llm, row["text"])
         latency = time.perf_counter() - start
@@ -471,14 +472,17 @@ def run_all_domain_benchmarks(
     created_at = datetime.now(UTC).isoformat()
 
     for dataset_name, rows in datasets.items():
+        print(f"[dataset] {dataset_name}: {len(rows)} samples")
         summary["datasets"][dataset_name] = {"samples": len(rows), "results": {}}
         grid_rows: list[tuple[str, list[int]]] = []
 
         for spec in MODEL_SPECS:
+            progress_label = f"{dataset_name} | {spec.name}"
+            print(f"[model] {spec.name}")
             if spec.kind == "transformer":
-                accuracy, avg_latency, predictions = evaluate_transformer(spec.model or "", rows)
+                accuracy, avg_latency, predictions = evaluate_transformer(spec.model or "", rows, progress_label)
             else:
-                accuracy, avg_latency, predictions = evaluate_llm(spec.repo or "", spec.file or "", rows)
+                accuracy, avg_latency, predictions = evaluate_llm(spec.repo or "", spec.file or "", rows, progress_label)
 
             save_results_to_sqlite(
                 db_path=sqlite_path,
@@ -496,6 +500,10 @@ def run_all_domain_benchmarks(
                 "model_kind": spec.kind,
                 "model_domain": spec.domain,
             }
+            print(
+                f"[done] {dataset_name} | {spec.name} | "
+                f"accuracy={accuracy:.4f} latency={avg_latency:.4f}s"
+            )
             accuracy_for_plot[spec.name].append(accuracy)
             latency_for_plot[spec.name].append(avg_latency)
             grid_rows.append((spec.name, [row["is_correct"] for row in predictions]))
