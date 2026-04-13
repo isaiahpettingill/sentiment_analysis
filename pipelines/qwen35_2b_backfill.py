@@ -1,15 +1,26 @@
 import argparse
 import json
+import sys
 from datetime import UTC, datetime
 from pathlib import Path
 
-from pipelines.domain_benchmarks import (
-    ModelSpec,
-    _ensure_db,
-    _load_selected_datasets,
-    evaluate_llm,
-    save_results_to_sqlite,
-)
+try:
+    from pipelines.domain_benchmarks import (
+        ModelSpec,
+        _ensure_db,
+        _load_selected_datasets,
+        evaluate_llm,
+        save_results_to_sqlite,
+    )
+except ModuleNotFoundError:
+    sys.path.append(str(Path(__file__).resolve().parents[1]))
+    from pipelines.domain_benchmarks import (
+        ModelSpec,
+        _ensure_db,
+        _load_selected_datasets,
+        evaluate_llm,
+        save_results_to_sqlite,
+    )
 
 
 QWEN35_2B_Q4 = ModelSpec(
