@@ -24,12 +24,13 @@ def _detect_text_column(sample: dict) -> str:
     raise ValueError("No non-empty text column found in dataset row")
 
 
-def _build_llm(repo_id: str, filename: str) -> Llama:
+def _build_llm(repo_id: str, filename: str, verbose: bool = False) -> Llama:
     model_path = hf_hub_download(repo_id=repo_id, filename=filename)
     return Llama(
         model_path=model_path,
         n_ctx=4096,
-        verbose=False,
+        n_gpu_layers=-1,
+        verbose=verbose,
     )
 
 
@@ -114,7 +115,7 @@ def compare_single_sample(
 
     text_key = text_column or _detect_text_column(row)
     classifier = pipeline("sentiment-analysis", model=classifier_model)
-    llm = _build_llm(llm_repo, llm_file)
+    llm = _build_llm(llm_repo, llm_file, verbose=args.verbose)
 
     return _compare_row(
         row=row,
@@ -138,13 +139,14 @@ def compare_full_split(
     llm_file: str,
     text_column: str | None,
     output_path: str,
+    verbose: bool = False,
 ) -> None:
     ds = load_dataset(dataset_name, split=split)
     first_row = ds[0]
     text_key = text_column or _detect_text_column(first_row)
 
     classifier = pipeline("sentiment-analysis", model=classifier_model)
-    llm = _build_llm(llm_repo, llm_file)
+    llm = _build_llm(llm_repo, llm_file, verbose=verbose)
 
     with open(output_path, "w", encoding="utf-8") as f:
         for idx, row in enumerate(ds):
@@ -183,6 +185,7 @@ def main() -> None:
     parser.add_argument("--text-column", default=None)
     parser.add_argument("--output", default=None)
     parser.add_argument("--all", action="store_true")
+    parser.add_argument("--verbose", action="store_true")
     args = parser.parse_args()
 
     if args.all:
@@ -196,6 +199,7 @@ def main() -> None:
             llm_file=args.llm_file,
             text_column=args.text_column,
             output_path=args.output,
+            verbose=args.verbose,
         )
         return
 

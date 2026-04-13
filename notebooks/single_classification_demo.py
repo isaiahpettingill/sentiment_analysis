@@ -11,15 +11,29 @@ def _():
     from llama_cpp import Llama
     from transformers import pipeline
 
-    from pipelines.domain_benchmarks import MODEL_SPECS, normalize_label, parse_llm_label
+    from pipelines.domain_benchmarks import (
+        MODEL_SPECS,
+        normalize_label,
+        parse_llm_label,
+    )
 
-    return Llama, MODEL_SPECS, hf_hub_download, mo, normalize_label, parse_llm_label, pipeline
+    return (
+        Llama,
+        MODEL_SPECS,
+        hf_hub_download,
+        mo,
+        normalize_label,
+        parse_llm_label,
+        pipeline,
+    )
 
 
 @app.cell
 def _(MODEL_SPECS, mo):
     model_names = [spec.name for spec in MODEL_SPECS]
-    model_choice = mo.ui.dropdown(options=model_names, value=model_names[0], label="Model")
+    model_choice = mo.ui.dropdown(
+        options=model_names, value=model_names[0], label="Model"
+    )
     text_input = mo.ui.text_area(
         value="I love how easy this workflow is, but inference speed still matters.",
         label="Text",
@@ -30,7 +44,18 @@ def _(MODEL_SPECS, mo):
 
 
 @app.cell
-def _(Llama, MODEL_SPECS, hf_hub_download, model_choice, normalize_label, parse_llm_label, pipeline, run, text_input, mo):
+def _(
+    Llama,
+    MODEL_SPECS,
+    hf_hub_download,
+    model_choice,
+    normalize_label,
+    parse_llm_label,
+    pipeline,
+    run,
+    text_input,
+    mo,
+):
     if not run.value:
         mo.md("Click **Classify** to run one model on one text.")
         return
@@ -46,7 +71,7 @@ def _(Llama, MODEL_SPECS, hf_hub_download, model_choice, normalize_label, parse_
         raw_output = output
     else:
         model_path = hf_hub_download(repo_id=spec.repo or "", filename=spec.file or "")
-        llm = Llama(model_path=model_path, n_ctx=4096, verbose=False)
+        llm = Llama(model_path=model_path, n_ctx=4096, n_gpu_layers=-1, verbose=False)
         prompt = (
             "Classify the sentiment of this text as POSITIVE, NEGATIVE, or NEUTRAL. "
             "Reply with exactly one label: POSITIVE, NEGATIVE, or NEUTRAL.\n\n"

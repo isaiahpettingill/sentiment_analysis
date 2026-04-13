@@ -2,6 +2,7 @@ import argparse
 import csv
 import json
 import math
+import re
 import sqlite3
 import time
 import urllib.request
@@ -22,7 +23,9 @@ KAGGLE_SOCIAL_DOWNLOAD_URL = "https://www.kaggle.com/api/v1/datasets/download/md
 KAGGLE_SOCIAL_ZIP_NAME = "mdismielhossenabir_sentiment-analysis.zip"
 KAGGLE_SOCIAL_CSV_NAME = "sentiment_analysis.csv"
 
-KAGGLE_REVIEWS_DOWNLOAD_URL = "https://www.kaggle.com/api/v1/datasets/download/dolbokostya/test-dataset"
+KAGGLE_REVIEWS_DOWNLOAD_URL = (
+    "https://www.kaggle.com/api/v1/datasets/download/dolbokostya/test-dataset"
+)
 KAGGLE_REVIEWS_ZIP_NAME = "dolbokostya_test-dataset.zip"
 KAGGLE_REVIEWS_CSV_NAME = "2.5m-reviews-dataset.csv"
 
@@ -109,16 +112,17 @@ def normalize_label(raw_label: str) -> str:
 
 
 def parse_llm_label(raw_output: str) -> str:
-    up = raw_output.upper()
+    cleaned = re.sub(r"<think>.*?</think>", "", raw_output, flags=re.DOTALL)
+    up = cleaned.upper()
     for label in ("POSITIVE", "NEGATIVE", "NEUTRAL"):
         if label in up:
             return label
-    return normalize_label(raw_output)
+    return normalize_label(cleaned)
 
 
-def build_llm(repo_id: str, filename: str) -> Llama:
+def build_llm(repo_id: str, filename: str, verbose: bool = False) -> Llama:
     model_path = hf_hub_download(repo_id=repo_id, filename=filename)
-    return Llama(model_path=model_path, n_ctx=4096, verbose=False)
+    return Llama(model_path=model_path, n_ctx=4096, n_gpu_layers=-1, verbose=verbose)
 
 
 def llm_predict(llm: Llama, text: str) -> tuple[str, str]:
@@ -128,7 +132,7 @@ def llm_predict(llm: Llama, text: str) -> tuple[str, str]:
         f"Text: {text}\n"
         "Label:"
     )
-    response = llm.create_completion(prompt=prompt, max_tokens=6, temperature=0.0)
+    response = llm.create_completion(prompt=prompt, max_tokens=64, temperature=0.0)
     raw_output = response["choices"][0]["text"].strip()
     return parse_llm_label(raw_output), raw_output
 
@@ -205,10 +209,16 @@ def load_kaggle_reviews_rows(max_samples: int, cache_dir: Path) -> list[dict]:
             if first is None:
                 return rows
 
-            text_key = _pick_first_present(first, ["text", "review", "content", "sentence"])
-            label_key = _pick_first_present(first, ["sentiment", "label", "stars", "rating", "score"])
+            text_key = _pick_first_present(
+                first, ["text", "review", "content", "sentence"]
+            )
+            label_key = _pick_first_present(
+                first, ["sentiment", "label", "stars", "rating", "score"]
+            )
             if text_key is None or label_key is None:
-                raise ValueError("Could not infer text/label columns from dolbokostya/test-dataset CSV")
+                raise ValueError(
+                    "Could not infer text/label columns from dolbokostya/test-dataset CSV"
+                )
 
             seed_rows = [first]
             for row in seed_rows:
@@ -235,7 +245,9 @@ def load_kaggle_reviews_rows(max_samples: int, cache_dir: Path) -> list[dict]:
     return rows
 
 
-def evaluate_transformer(model_name: str, rows: list[dict], progress_label: str) -> tuple[float, float, list[dict]]:
+def evaluate_transformer(
+    model_name: str, rows: list[dict], progress_label: str
+) -> tuple[float, float, list[dict]]:
     classifier = pipeline("sentiment-analysis", model=model_name)
     total_correct = 0
     total_latency = 0.0
@@ -268,7 +280,9 @@ def evaluate_transformer(model_name: str, rows: list[dict], progress_label: str)
     return accuracy, avg_latency, predictions
 
 
-def evaluate_llm(repo: str, filename: str, rows: list[dict], progress_label: str) -> tuple[float, float, list[dict]]:
+def evaluate_llm(
+    repo: str, filename: str, rows: list[dict], progress_label: str
+) -> tuple[float, float, list[dict]]:
     llm = build_llm(repo_id=repo, filename=filename)
     total_correct = 0
     total_latency = 0.0
@@ -409,7 +423,9 @@ def build_bar_chart(
 
     fig, ax = plt.subplots(figsize=(12, 6))
     for i, model_name in enumerate(model_names):
-        offsets = [x + (i - (len(model_names) - 1) / 2) * bar_width for x in x_positions]
+        offsets = [
+            x + (i - (len(model_names) - 1) / 2) * bar_width for x in x_positions
+        ]
         ax.bar(offsets, values_by_model[model_name], width=bar_width, label=model_name)
 
     ax.set_xticks(x_positions)
@@ -424,7 +440,9 @@ def build_bar_chart(
     plt.close(fig)
 
 
-def build_correctness_grid(dataset_name: str, matrix_rows: list[tuple[str, list[int]]], output_path: Path) -> None:
+def build_correctness_grid(
+    dataset_name: str, matrix_rows: list[tuple[str, list[int]]], output_path: Path
+) -> None:
     if not matrix_rows:
         return
 
@@ -449,14 +467,20 @@ def build_correctness_grid(dataset_name: str, matrix_rows: list[tuple[str, list[
     plt.close(fig)
 
 
-def _load_selected_datasets(selected: list[str], social_samples: int, review_samples: int, cache_dir: Path) -> dict[str, list[dict]]:
+def _load_selected_datasets(
+    selected: list[str], social_samples: int, review_samples: int, cache_dir: Path
+) -> dict[str, list[dict]]:
     datasets: dict[str, list[dict]] = {}
     if "instagram" in selected:
-        datasets["Instagram Comments (test)"] = load_instagram_rows(max_samples=social_samples)
+        datasets["Instagram Comments (test)"] = load_instagram_rows(
+            max_samples=social_samples
+        )
     if "kaggle_social" in selected:
-        datasets["Kaggle Sentiment Analysis (mdismielhossenabir)"] = load_kaggle_social_rows(
-            max_samples=social_samples,
-            cache_dir=cache_dir,
+        datasets["Kaggle Sentiment Analysis (mdismielhossenabir)"] = (
+            load_kaggle_social_rows(
+                max_samples=social_samples,
+                cache_dir=cache_dir,
+            )
         )
     if "kaggle_reviews" in selected:
         datasets["Kaggle Reviews (dolbokostya subset)"] = load_kaggle_reviews_rows(
@@ -498,9 +522,13 @@ def run_all_domain_benchmarks(
             progress_label = f"{dataset_name} | {spec.name}"
             print(f"[model] {spec.name}")
             if spec.kind == "transformer":
-                accuracy, avg_latency, predictions = evaluate_transformer(spec.model or "", rows, progress_label)
+                accuracy, avg_latency, predictions = evaluate_transformer(
+                    spec.model or "", rows, progress_label
+                )
             else:
-                accuracy, avg_latency, predictions = evaluate_llm(spec.repo or "", spec.file or "", rows, progress_label)
+                accuracy, avg_latency, predictions = evaluate_llm(
+                    spec.repo or "", spec.file or "", rows, progress_label
+                )
 
             save_results_to_sqlite(
                 db_path=sqlite_path,
@@ -533,13 +561,23 @@ def run_all_domain_benchmarks(
                 .replace(")", "")
                 .replace("-", "_")
             )
-            safe_model = spec.name.lower().replace(" ", "_").replace(":", "").replace(".", "")
-            predictions_path = output_dir / f"predictions_{safe_dataset}_{safe_model}.jsonl"
+            safe_model = (
+                spec.name.lower().replace(" ", "_").replace(":", "").replace(".", "")
+            )
+            predictions_path = (
+                output_dir / f"predictions_{safe_dataset}_{safe_model}.jsonl"
+            )
             with predictions_path.open("w", encoding="utf-8") as file_handle:
                 for row in predictions:
                     file_handle.write(json.dumps(row, ensure_ascii=False) + "\n")
 
-        safe_dataset = dataset_name.lower().replace(" ", "_").replace("(", "").replace(")", "").replace("-", "_")
+        safe_dataset = (
+            dataset_name.lower()
+            .replace(" ", "_")
+            .replace("(", "")
+            .replace(")", "")
+            .replace("-", "_")
+        )
         build_correctness_grid(
             dataset_name=dataset_name,
             matrix_rows=grid_rows,

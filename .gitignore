@@ -25,7 +25,7 @@ dist/
 *.db
 *.zip
 *.jsonl
-*.png
+# *.png
 
 # Project outputs
 results/

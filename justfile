@@ -6,7 +6,7 @@ sync:
 
 setup-cuda-remote:
     uv sync
-    uv pip uninstall -y llama-cpp-python torch torchvision torchaudio
+    uv pip uninstall llama-cpp-python torch torchvision torchaudio
     uv pip install --index-url https://download.pytorch.org/whl/cu124 torch torchvision torchaudio
     CMAKE_ARGS="-DGGML_CUDA=on" uv pip install --no-cache-dir --force-reinstall llama-cpp-python
     uv run python -c "import torch; print(torch.cuda.is_available(), torch.cuda.get_device_name(0) if torch.cuda.is_available() else 'no-gpu')"
@@ -21,7 +21,7 @@ pipeline-social-kaggle:
     uv run python pipelines/domain_benchmarks.py --social-samples 499 --review-samples 0
 
 pipeline-reviews-kaggle:
-    uv run python pipelines/domain_benchmarks.py --social-samples 0 --review-samples 2000
+    uv run python pipelines/domain_benchmarks.py --social-samples 0 --review-samples 500
 
 pipeline-all-domains:
     uv run python pipelines/domain_benchmarks.py
@@ -42,8 +42,8 @@ report-qwen35-2b-backfill:
 
 report-rerun-accurate:
     uv sync
-    uv run python pipelines/domain_benchmarks.py --datasets kaggle_reviews --review-samples 2000
-    uv run python pipelines/qwen35_2b_backfill.py
+    uv run python pipelines/domain_benchmarks.py --datasets kaggle_reviews --review-samples 500
+    # uv run python pipelines/qwen35_2b_backfill.py
     uv run python pipelines/report_charts.py
 
 notebook-imdb:
