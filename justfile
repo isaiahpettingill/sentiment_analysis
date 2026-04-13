@@ -33,6 +33,12 @@ report-qwen35-2b-backfill:
     uv run python pipelines/qwen35_2b_backfill.py
     uv run python pipelines/report_charts.py
 
+report-rerun-accurate:
+    uv sync
+    uv run python pipelines/domain_benchmarks.py --datasets kaggle_reviews --review-samples 2000
+    uv run python pipelines/qwen35_2b_backfill.py
+    uv run python pipelines/report_charts.py
+
 notebook-imdb:
     uv run marimo edit notebooks/imdb_pipeline_notebook.py
 

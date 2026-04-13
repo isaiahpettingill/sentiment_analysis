@@ -88,6 +88,17 @@ def normalize_label(raw_label: str) -> str:
         return "NEUTRAL"
     if label in {"label_2", "2", "positive", "pos", "4 stars", "5 stars"}:
         return "POSITIVE"
+
+    try:
+        numeric = float(label)
+        if numeric <= 2.0:
+            return "NEGATIVE"
+        if numeric < 4.0:
+            return "NEUTRAL"
+        return "POSITIVE"
+    except ValueError:
+        pass
+
     if "pos" in label:
         return "POSITIVE"
     if "neg" in label:
