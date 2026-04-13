@@ -4,6 +4,13 @@ default:
 sync:
     uv sync
 
+setup-cuda-remote:
+    uv sync
+    uv pip uninstall -y llama-cpp-python torch torchvision torchaudio
+    uv pip install --index-url https://download.pytorch.org/whl/cu124 torch torchvision torchaudio
+    CMAKE_ARGS="-DGGML_CUDA=on" uv pip install --no-cache-dir --force-reinstall llama-cpp-python
+    uv run python -c "import torch; print(torch.cuda.is_available(), torch.cuda.get_device_name(0) if torch.cuda.is_available() else 'no-gpu')"
+
 pipeline-domain-benchmarks:
     uv run python pipelines/domain_benchmarks.py
 
