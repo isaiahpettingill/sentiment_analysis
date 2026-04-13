@@ -19,11 +19,18 @@ pipeline-reviews-kaggle:
 pipeline-all-domains:
     uv run python pipelines/domain_benchmarks.py
 
+pipeline-qwen35-2b-backfill:
+    uv run python pipelines/qwen35_2b_backfill.py
+
 charts-report:
     uv run python pipelines/report_charts.py
 
 report-all:
     uv run python pipelines/domain_benchmarks.py
+    uv run python pipelines/report_charts.py
+
+report-qwen35-2b-backfill:
+    uv run python pipelines/qwen35_2b_backfill.py
     uv run python pipelines/report_charts.py
 
 notebook-imdb:

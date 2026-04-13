@@ -53,6 +53,13 @@ MODEL_SPECS = [
         domain="general",
     ),
     ModelSpec(
+        name="Qwen3.5 2B Q4",
+        kind="llm",
+        repo="unsloth/Qwen3.5-2B-GGUF",
+        file="Qwen3.5-2B-Q4_0.gguf",
+        domain="general",
+    ),
+    ModelSpec(
         name="Specialized: BERTweet Sentiment",
         kind="transformer",
         model="finiteautomata/bertweet-base-sentiment-analysis",

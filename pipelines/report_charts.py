@@ -19,140 +19,142 @@ def _slugify(name: str) -> str:
     )
 
 
-def _resolve_created_at(conn: sqlite3.Connection, created_at: str | None) -> str:
+def _selected_runs(conn: sqlite3.Connection, created_at: str | None) -> list[dict]:
     if created_at:
-        row = conn.execute("SELECT 1 FROM runs WHERE created_at = ? LIMIT 1", (created_at,)).fetchone()
-        if row is None:
-            raise ValueError(f"No run found for created_at={created_at}")
-        return created_at
+        rows = conn.execute(
+            """
+            SELECT run_id, created_at, dataset_name, model_name, accuracy, average_latency_seconds
+            FROM runs
+            WHERE created_at = ?
+            ORDER BY dataset_name, model_name
+            """,
+            (created_at,),
+        ).fetchall()
+    else:
+        rows = conn.execute(
+            """
+            SELECT r.run_id, r.created_at, r.dataset_name, r.model_name, r.accuracy, r.average_latency_seconds
+            FROM runs r
+            JOIN (
+                SELECT dataset_name, model_name, MAX(created_at) AS max_created_at
+                FROM runs
+                GROUP BY dataset_name, model_name
+            ) latest
+            ON r.dataset_name = latest.dataset_name
+            AND r.model_name = latest.model_name
+            AND r.created_at = latest.max_created_at
+            ORDER BY r.dataset_name, r.model_name
+            """,
+        ).fetchall()
 
-    row = conn.execute("SELECT MAX(created_at) FROM runs").fetchone()
-    if row is None or row[0] is None:
-        raise ValueError("No benchmark runs found in SQLite database")
-    return str(row[0])
+    selected = [
+        {
+            "run_id": str(run_id),
+            "created_at": str(run_created_at),
+            "dataset_name": str(dataset_name),
+            "model_name": str(model_name),
+            "accuracy": float(accuracy),
+            "average_latency_seconds": float(latency),
+        }
+        for run_id, run_created_at, dataset_name, model_name, accuracy, latency in rows
+    ]
+    if not selected:
+        raise ValueError("No benchmark runs found for requested selection")
+    return selected
 
 
-def _get_models(conn: sqlite3.Connection, created_at: str) -> list[str]:
+def _group_by_dataset(selected_runs: list[dict]) -> dict[str, list[dict]]:
+    grouped: dict[str, list[dict]] = {}
+    for row in selected_runs:
+        grouped.setdefault(row["dataset_name"], []).append(row)
+    for dataset_name in grouped:
+        grouped[dataset_name] = sorted(grouped[dataset_name], key=lambda item: item["model_name"])
+    return grouped
+
+
+def _models(selected_runs: list[dict]) -> list[str]:
+    return sorted({row["model_name"] for row in selected_runs})
+
+
+def _dataset_accuracy(rows: list[dict]) -> dict[str, float]:
+    return {row["model_name"]: row["accuracy"] for row in rows}
+
+
+def _dataset_latency(rows: list[dict]) -> dict[str, float]:
+    return {row["model_name"]: row["average_latency_seconds"] for row in rows}
+
+
+def _combined_accuracy(conn: sqlite3.Connection, run_ids: list[str]) -> dict[str, float]:
+    placeholders = ",".join("?" for _ in run_ids)
     rows = conn.execute(
-        "SELECT DISTINCT model_name FROM runs WHERE created_at = ? ORDER BY model_name",
-        (created_at,),
-    ).fetchall()
-    return [str(row[0]) for row in rows]
-
-
-def _get_datasets(conn: sqlite3.Connection, created_at: str) -> list[str]:
-    rows = conn.execute(
-        "SELECT DISTINCT dataset_name FROM runs WHERE created_at = ? ORDER BY dataset_name",
-        (created_at,),
-    ).fetchall()
-    return [str(row[0]) for row in rows]
-
-
-def _dataset_accuracy(conn: sqlite3.Connection, created_at: str, dataset_name: str) -> dict[str, float]:
-    rows = conn.execute(
-        """
-        SELECT model_name, accuracy
-        FROM runs
-        WHERE created_at = ? AND dataset_name = ?
-        """,
-        (created_at, dataset_name),
-    ).fetchall()
-    return {str(model): float(acc) for model, acc in rows}
-
-
-def _dataset_latency(conn: sqlite3.Connection, created_at: str, dataset_name: str) -> dict[str, float]:
-    rows = conn.execute(
-        """
-        SELECT model_name, average_latency_seconds
-        FROM runs
-        WHERE created_at = ? AND dataset_name = ?
-        """,
-        (created_at, dataset_name),
-    ).fetchall()
-    return {str(model): float(lat) for model, lat in rows}
-
-
-def _combined_accuracy(conn: sqlite3.Connection, created_at: str) -> dict[str, float]:
-    rows = conn.execute(
-        """
+        f"""
         SELECT model_name, AVG(CAST(is_correct AS REAL))
         FROM predictions
-        WHERE run_id IN (SELECT run_id FROM runs WHERE created_at = ?)
+        WHERE run_id IN ({placeholders})
         GROUP BY model_name
+        ORDER BY model_name
         """,
-        (created_at,),
+        run_ids,
     ).fetchall()
     return {str(model): float(acc) for model, acc in rows}
 
 
-def _combined_latency(conn: sqlite3.Connection, created_at: str) -> dict[str, float]:
+def _combined_latency(conn: sqlite3.Connection, run_ids: list[str]) -> dict[str, float]:
+    placeholders = ",".join("?" for _ in run_ids)
     rows = conn.execute(
-        """
+        f"""
         SELECT model_name, AVG(latency_seconds)
         FROM predictions
-        WHERE run_id IN (SELECT run_id FROM runs WHERE created_at = ?)
+        WHERE run_id IN ({placeholders})
         GROUP BY model_name
+        ORDER BY model_name
         """,
-        (created_at,),
+        run_ids,
     ).fetchall()
     return {str(model): float(lat) for model, lat in rows}
 
 
-def _dataset_grid_values(
-    conn: sqlite3.Connection,
-    created_at: str,
-    dataset_name: str,
-    models: list[str],
-) -> list[tuple[str, list[int]]]:
-    rows = conn.execute(
-        """
-        SELECT model_name, sample_index, is_correct
-        FROM predictions
-        WHERE run_id IN (
-            SELECT run_id FROM runs
-            WHERE created_at = ? AND dataset_name = ?
-        )
-        ORDER BY model_name, sample_index
-        """,
-        (created_at, dataset_name),
-    ).fetchall()
-
+def _dataset_grid_values(conn: sqlite3.Connection, rows: list[dict], models: list[str]) -> list[tuple[str, list[int]]]:
     by_model: dict[str, list[int]] = {model: [] for model in models}
-    for model_name, _, is_correct in rows:
-        by_model[str(model_name)].append(int(is_correct))
+    for row in rows:
+        pred_rows = conn.execute(
+            """
+            SELECT is_correct
+            FROM predictions
+            WHERE run_id = ?
+            ORDER BY sample_index
+            """,
+            (row["run_id"],),
+        ).fetchall()
+        by_model[row["model_name"]] = [int(value) for (value,) in pred_rows]
+    return [(model, by_model.get(model, [])) for model in models if by_model.get(model)]
 
-    return [(model, by_model.get(model, [])) for model in models]
 
+def _combined_grid_values(conn: sqlite3.Connection, selected_runs: list[dict], models: list[str]) -> list[tuple[str, list[int]]]:
+    sample_keys: set[tuple[str, int]] = set()
+    prediction_map: dict[tuple[str, str, int], int] = {}
 
-def _combined_grid_values(conn: sqlite3.Connection, created_at: str, models: list[str]) -> list[tuple[str, list[int]]]:
-    sample_rows = conn.execute(
-        """
-        SELECT DISTINCT dataset_name, sample_index
-        FROM predictions
-        WHERE run_id IN (SELECT run_id FROM runs WHERE created_at = ?)
-        ORDER BY dataset_name, sample_index
-        """,
-        (created_at,),
-    ).fetchall()
-    sample_keys = [(str(dataset_name), int(sample_index)) for dataset_name, sample_index in sample_rows]
+    for row in selected_runs:
+        pred_rows = conn.execute(
+            """
+            SELECT sample_index, is_correct
+            FROM predictions
+            WHERE run_id = ?
+            ORDER BY sample_index
+            """,
+            (row["run_id"],),
+        ).fetchall()
+        for sample_index, is_correct in pred_rows:
+            key = (row["dataset_name"], int(sample_index))
+            sample_keys.add(key)
+            prediction_map[(row["dataset_name"], row["model_name"], int(sample_index))] = int(is_correct)
 
-    pred_rows = conn.execute(
-        """
-        SELECT dataset_name, sample_index, model_name, is_correct
-        FROM predictions
-        WHERE run_id IN (SELECT run_id FROM runs WHERE created_at = ?)
-        """,
-        (created_at,),
-    ).fetchall()
-
-    index_map: dict[tuple[str, str, int], int] = {}
-    for dataset_name, sample_index, model_name, is_correct in pred_rows:
-        index_map[(str(dataset_name), str(model_name), int(sample_index))] = int(is_correct)
-
+    ordered_samples = sorted(sample_keys, key=lambda item: (item[0], item[1]))
     matrix: list[tuple[str, list[int]]] = []
     for model in models:
-        values = [index_map.get((dataset_name, model, sample_index), 0) for dataset_name, sample_index in sample_keys]
-        matrix.append((model, values))
+        values = [prediction_map.get((dataset_name, model, sample_index), 0) for dataset_name, sample_index in ordered_samples]
+        if values:
+            matrix.append((model, values))
     return matrix
 
 
@@ -161,9 +163,11 @@ def _plot_bar(values: dict[str, float], title: str, y_label: str, output_path: P
     y_values = [values[model] for model in models]
 
     fig, ax = plt.subplots(figsize=(10, 6))
-    ax.bar(models, y_values)
+    x_positions = list(range(len(models)))
+    ax.bar(x_positions, y_values)
     ax.set_title(title)
     ax.set_ylabel(y_label)
+    ax.set_xticks(x_positions)
     ax.set_xticklabels(models, rotation=20, ha="right")
     ax.grid(axis="y", alpha=0.2)
     fig.tight_layout()
@@ -179,7 +183,7 @@ def _plot_grid(matrix_rows: list[tuple[str, list[int]]], title: str, output_path
     fig_height = max(3, 0.8 * len(matrix_rows))
     fig, ax = plt.subplots(figsize=(12, fig_height))
 
-    for y, (model_name, values) in enumerate(matrix_rows):
+    for y, (_, values) in enumerate(matrix_rows):
         for x, value in enumerate(values):
             ax.scatter(x, y, marker="s", s=16, color="#2ca02c" if value == 1 else "#d62728")
 
@@ -201,44 +205,45 @@ def _plot_grid(matrix_rows: list[tuple[str, list[int]]], title: str, output_path
 
 def generate_report_charts(sqlite_path: Path, output_dir: Path, created_at: str | None) -> None:
     with sqlite3.connect(sqlite_path) as conn:
-        run_created_at = _resolve_created_at(conn, created_at)
-        models = _get_models(conn, run_created_at)
-        datasets = _get_datasets(conn, run_created_at)
+        selected = _selected_runs(conn, created_at)
+        grouped = _group_by_dataset(selected)
+        models = _models(selected)
+        run_ids = [row["run_id"] for row in selected]
 
-        for dataset_name in datasets:
+        for dataset_name, rows in grouped.items():
             slug = _slugify(dataset_name)
             _plot_bar(
-                values=_dataset_accuracy(conn, run_created_at, dataset_name),
+                values=_dataset_accuracy(rows),
                 title=f"Accuracy by model: {dataset_name}",
                 y_label="Accuracy",
                 output_path=output_dir / f"report_accuracy_{slug}.png",
             )
             _plot_bar(
-                values=_dataset_latency(conn, run_created_at, dataset_name),
+                values=_dataset_latency(rows),
                 title=f"Compute cost (avg latency) by model: {dataset_name}",
                 y_label="Average latency per item (seconds)",
                 output_path=output_dir / f"report_compute_cost_{slug}.png",
             )
             _plot_grid(
-                matrix_rows=_dataset_grid_values(conn, run_created_at, dataset_name, models),
+                matrix_rows=_dataset_grid_values(conn, rows, models),
                 title=f"Per-prompt correctness grid: {dataset_name}",
                 output_path=output_dir / f"report_grid_{slug}.png",
             )
 
         _plot_bar(
-            values=_combined_accuracy(conn, run_created_at),
+            values=_combined_accuracy(conn, run_ids),
             title="Accuracy by model: all datasets combined",
             y_label="Accuracy",
             output_path=output_dir / "report_accuracy_all_datasets.png",
         )
         _plot_bar(
-            values=_combined_latency(conn, run_created_at),
+            values=_combined_latency(conn, run_ids),
             title="Compute cost (avg latency) by model: all datasets combined",
             y_label="Average latency per item (seconds)",
             output_path=output_dir / "report_compute_cost_all_datasets.png",
         )
         _plot_grid(
-            matrix_rows=_combined_grid_values(conn, run_created_at, models),
+            matrix_rows=_combined_grid_values(conn, selected, models),
             title="Per-prompt correctness grid: all datasets combined",
             output_path=output_dir / "report_grid_all_datasets.png",
         )
@@ -257,7 +262,7 @@ def main() -> None:
     parser.add_argument(
         "--created-at",
         default=None,
-        help="Specific run timestamp (created_at) from runs table. Defaults to latest run.",
+        help="If provided, chart one benchmark batch. If omitted, uses latest run per model per dataset.",
     )
     args = parser.parse_args()
 
