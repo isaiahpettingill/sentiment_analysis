@@ -187,7 +187,13 @@ def _plot_bar(
     models = list(values.keys())
     y_values = [values[model] for model in models]
 
-    fig, ax = plt.subplots(figsize=(3.5, 2.5))
+    fig, ax = plt.subplots(figsize=(5, 3))
+    plt.rcParams["font.family"] = "serif"
+    plt.rcParams["font.serif"] = [
+        "Times New Roman",
+        "DejaVu Serif",
+        "Computer Modern Roman",
+    ]
     x_positions = list(range(len(models)))
     bar_colors = [MODEL_COLORS.get(model, "#7f7f7f") for model in models]
     bars = ax.bar(
@@ -196,13 +202,18 @@ def _plot_bar(
         width=0.6,
         color=bar_colors,
     )
-    ax.set_title(title, fontsize=11, fontweight="bold")
-    ax.set_ylabel(y_label, fontsize=9)
+    ax.set_title(title, fontsize=12, fontweight="bold", fontname="serif")
+    ax.set_ylabel(y_label, fontsize=11, fontname="serif")
     ax.set_xticks(x_positions)
-    ax.set_xticklabels(models, rotation=25, ha="right", fontsize=8)
-    ax.tick_params(axis="y", labelsize=8)
+    ax.set_xticklabels(models, rotation=30, ha="right", fontsize=10)
+    ax.tick_params(axis="y", labelsize=10)
     ax.grid(axis="y", alpha=0.2)
-    ax.set_ylim(0, max(y_values) * 1.1 if max(y_values) > 0 else 1)
+    ax.set_ylim(0, max(y_values) * 1.15 if max(y_values) > 0 else 1)
+    ax.set_xlabel("", fontsize=11)
+    for item in ax.get_xticklabels():
+        item.set_fontname("serif")
+    for item in ax.get_yticklabels():
+        item.set_fontname("serif")
     for bar in bars:
         height = bar.get_height()
         ax.annotate(
