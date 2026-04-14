@@ -50,6 +50,43 @@ Detailed description of the research design, data collection, and analysis metho
 \section{Results}
 Presentation of the findings, including tables, figures, and statistical analyses.
 
+\subsection{Benchmark Results}
+
+\begin{table}[ht]
+\centering
+\begin{tabular}{llcc}
+\toprule
+\textbf{Dataset} & \textbf{Model} & \textbf{Accuracy} & \textbf{Latency (s)} \\
+\midrule
+\multicolumn{4}{l}{\textit{Instagram Comments (test) - 56 samples}} \\
+ & Gemma 4 E2B & 60.71\% & 0.0930 \\
+ & Qwen3.5 0.8B Q4 & 28.57\% & 0.2128 \\
+ & Qwen3.5 2B Q4 & 28.57\% & 0.5344 \\
+ & BERTweet Sentiment & 60.71\% & 0.0081 \\
+ & Reviews-SST2 & 46.43\% & 0.0035 \\
+ & Twitter-RoBERTa & 60.71\% & 0.0062 \\
+\midrule
+\multicolumn{4}{l}{\textit{Kaggle Reviews (dolbokostya) - 2000 samples}} \\
+ & Gemma 4 E2B & 63.00\% & 0.0851 \\
+ & Qwen3.5 0.8B Q4 & 65.00\% & 0.1559 \\
+ & Qwen3.5 2B Q4 & 65.00\% & 0.3159 \\
+ & BERTweet Sentiment & 63.00\% & 0.0060 \\
+ & Reviews-SST2 & 68.00\% & 0.0031 \\
+ & Twitter-RoBERTa & 65.00\% & 0.0060 \\
+\midrule
+\multicolumn{4}{l}{\textit{Kaggle Sentiment Analysis (mdismielhossenabir) - 499 samples}} \\
+ & Gemma 4 E2B & 73.21\% & 0.0976 \\
+ & Qwen3.5 0.8B Q4 & 33.87\% & 0.2421 \\
+ & Qwen3.5 2B Q4 & 32.26\% & 0.4828 \\
+ & BERTweet Sentiment & 71.94\% & 0.0059 \\
+ & Reviews-SST2 & 50.70\% & 0.0033 \\
+ & Twitter-RoBERTa & 71.94\% & 0.0061 \\
+\bottomrule
+\end{tabular}
+\caption{Benchmark results comparing LLMs and fine-tuned transformer models across three sentiment analysis datasets. Accuracy represents the maximum accuracy achieved across multiple runs; latency is the average inference time per sample.}
+\label{tab:benchmark-results}
+\end{table}
+
 \section{Discussion}
 Interpretation of the results, implications, and relation to previous research.
 

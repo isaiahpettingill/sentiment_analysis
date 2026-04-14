@@ -468,23 +468,22 @@ def build_correctness_grid(
 
 
 def _load_selected_datasets(
-    selected: list[str], social_samples: int, review_samples: int, cache_dir: Path
+    selected: list[str], samples: int, cache_dir: Path
 ) -> dict[str, list[dict]]:
     datasets: dict[str, list[dict]] = {}
+    samples = min(samples, 500)
     if "instagram" in selected:
-        datasets["Instagram Comments (test)"] = load_instagram_rows(
-            max_samples=social_samples
-        )
+        datasets["Instagram Comments (test)"] = load_instagram_rows(max_samples=samples)
     if "kaggle_social" in selected:
         datasets["Kaggle Sentiment Analysis (mdismielhossenabir)"] = (
             load_kaggle_social_rows(
-                max_samples=social_samples,
+                max_samples=samples,
                 cache_dir=cache_dir,
             )
         )
     if "kaggle_reviews" in selected:
         datasets["Kaggle Reviews (dolbokostya subset)"] = load_kaggle_reviews_rows(
-            max_samples=review_samples,
+            max_samples=samples,
             cache_dir=cache_dir,
         )
     return datasets
@@ -492,7 +491,6 @@ def _load_selected_datasets(
 
 def run_all_domain_benchmarks(
     social_samples: int,
-    review_samples: int,
     output_dir: Path,
     cache_dir: Path,
     sqlite_path: Path,
@@ -500,8 +498,7 @@ def run_all_domain_benchmarks(
 ) -> dict:
     datasets = _load_selected_datasets(
         selected=selected_datasets,
-        social_samples=social_samples,
-        review_samples=review_samples,
+        samples=social_samples,
         cache_dir=cache_dir,
     )
 
@@ -611,16 +608,17 @@ def run_all_domain_benchmarks(
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--social-samples",
-        type=int,
-        default=0,
-        help="Rows to evaluate per social dataset. 0 means all rows.",
+        "--dataset",
+        type=str,
+        required=True,
+        choices=["instagram", "kaggle_social", "kaggle_reviews"],
+        help="Dataset to benchmark.",
     )
     parser.add_argument(
-        "--review-samples",
+        "--samples",
         type=int,
-        default=2000,
-        help="Rows to evaluate from the large reviews dataset.",
+        default=500,
+        help="Rows to evaluate. Capped at 500.",
     )
     parser.add_argument(
         "--output-dir",
@@ -634,22 +632,14 @@ def main() -> None:
         "--sqlite-path",
         default="/home/isaiahjp/repos/sentiment_analysis/results/benchmark_results.sqlite",
     )
-    parser.add_argument(
-        "--datasets",
-        nargs="+",
-        choices=["instagram", "kaggle_social", "kaggle_reviews"],
-        default=["instagram", "kaggle_social", "kaggle_reviews"],
-        help="Datasets to benchmark. Defaults to all domains.",
-    )
     args = parser.parse_args()
 
     summary = run_all_domain_benchmarks(
-        social_samples=args.social_samples,
-        review_samples=args.review_samples,
+        social_samples=args.samples,
         output_dir=Path(args.output_dir),
         cache_dir=Path(args.cache_dir),
         sqlite_path=Path(args.sqlite_path),
-        selected_datasets=args.datasets,
+        selected_datasets=[args.dataset],
     )
     print(json.dumps(summary, ensure_ascii=False, indent=2))
 
