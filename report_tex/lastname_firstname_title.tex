@@ -9,6 +9,7 @@
 \usepackage[hyperref]{tex_styles/acl2019_no_nums}
 
 \usepackage{import}
+\usepackage{booktabs}
 \import{./}{tex_styles/preamble.tex}
 
 \graphicspath{{images/}}
@@ -50,42 +51,86 @@ Detailed description of the research design, data collection, and analysis metho
 \section{Results}
 Presentation of the findings, including tables, figures, and statistical analyses.
 
-\subsection{Benchmark Results}
+\noindent\textbf{Instagram Comments (test) - 56 samples}
 
 \begin{table}[ht]
 \centering
-\begin{tabular}{llcc}
+\begin{tabular}{@{}lcc@{}}
 \toprule
-\textbf{Dataset} & \textbf{Model} & \textbf{Accuracy} & \textbf{Latency (s)} \\
+\textbf{Model} & \textbf{Accuracy} & \textbf{Latency (s)} \\
 \midrule
-\multicolumn{4}{l}{\textit{Instagram Comments (test) - 56 samples}} \\
- & Gemma 4 E2B & 60.71\% & 0.0930 \\
- & Qwen3.5 0.8B Q4 & 28.57\% & 0.2128 \\
- & Qwen3.5 2B Q4 & 28.57\% & 0.5344 \\
- & BERTweet Sentiment & 60.71\% & 0.0081 \\
- & Reviews-SST2 & 46.43\% & 0.0035 \\
- & Twitter-RoBERTa & 60.71\% & 0.0062 \\
-\midrule
-\multicolumn{4}{l}{\textit{Kaggle Reviews (dolbokostya) - 2000 samples}} \\
- & Gemma 4 E2B & 63.00\% & 0.0851 \\
- & Qwen3.5 0.8B Q4 & 65.00\% & 0.1559 \\
- & Qwen3.5 2B Q4 & 65.00\% & 0.3159 \\
- & BERTweet Sentiment & 63.00\% & 0.0060 \\
- & Reviews-SST2 & 68.00\% & 0.0031 \\
- & Twitter-RoBERTa & 65.00\% & 0.0060 \\
-\midrule
-\multicolumn{4}{l}{\textit{Kaggle Sentiment Analysis (mdismielhossenabir) - 499 samples}} \\
- & Gemma 4 E2B & 73.21\% & 0.0976 \\
- & Qwen3.5 0.8B Q4 & 33.87\% & 0.2421 \\
- & Qwen3.5 2B Q4 & 32.26\% & 0.4828 \\
- & BERTweet Sentiment & 71.94\% & 0.0059 \\
- & Reviews-SST2 & 50.70\% & 0.0033 \\
- & Twitter-RoBERTa & 71.94\% & 0.0061 \\
+Gemma 4 E2B & 60.71\% & 0.0930 \\
+Qwen3.5 0.8B Q4 & 28.57\% & 0.2128 \\
+Qwen3.5 2B Q4 & 28.57\% & 0.5344 \\
+BERTweet Sentiment & 60.71\% & 0.0081 \\
+Reviews-SST2 & 46.43\% & 0.0035 \\
+Twitter-RoBERTa & 60.71\% & 0.0062 \\
 \bottomrule
 \end{tabular}
-\caption{Benchmark results comparing LLMs and fine-tuned transformer models across three sentiment analysis datasets. Accuracy represents the maximum accuracy achieved across multiple runs; latency is the average inference time per sample.}
-\label{tab:benchmark-results}
+\caption{Benchmark results for Instagram Comments (test). Accuracy represents the maximum accuracy achieved across multiple runs; latency is the average inference time per sample.}
+\label{tab:benchmark-results-instagram}
 \end{table}
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.8\linewidth]{report_charts/report_accuracy_instagram_comments_test.png}
+\caption{Accuracy chart for Instagram Comments (test).}
+\label{fig:accuracy-instagram}
+\end{figure}
+
+\noindent\textbf{Kaggle Reviews (dolbokostya) - 2000 samples}
+
+\begin{table}[ht]
+\centering
+\begin{tabular}{@{}lcc@{}}
+\toprule
+\textbf{Model} & \textbf{Accuracy} & \textbf{Latency (s)} \\
+\midrule
+Gemma 4 E2B & 63.00\% & 0.0851 \\
+Qwen3.5 0.8B Q4 & 65.00\% & 0.1559 \\
+Qwen3.5 2B Q4 & 65.00\% & 0.3159 \\
+BERTweet Sentiment & 63.00\% & 0.0060 \\
+Reviews-SST2 & 68.00\% & 0.0031 \\
+Twitter-RoBERTa & 65.00\% & 0.0060 \\
+\bottomrule
+\end{tabular}
+\caption{Benchmark results for Kaggle Reviews (dolbokostya). Accuracy represents the maximum accuracy achieved across multiple runs; latency is the average inference time per sample.}
+\label{tab:benchmark-results-kaggle-reviews}
+\end{table}
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.8\linewidth]{report_charts/report_accuracy_kaggle_reviews_dolbokostya_subset.png}
+\caption{Accuracy chart for Kaggle Reviews (dolbokostya).}
+\label{fig:accuracy-kaggle-reviews}
+\end{figure}
+
+\noindent\textbf{Kaggle Sentiment Analysis (mdismielhossenabir) - 499 samples}
+
+\begin{table}[ht]
+\centering
+\begin{tabular}{@{}lcc@{}}
+\toprule
+\textbf{Model} & \textbf{Accuracy} & \textbf{Latency (s)} \\
+\midrule
+Gemma 4 E2B & 73.21\% & 0.0976 \\
+Qwen3.5 0.8B Q4 & 33.87\% & 0.2421 \\
+Qwen3.5 2B Q4 & 32.26\% & 0.4828 \\
+BERTweet Sentiment & 71.94\% & 0.0059 \\
+Reviews-SST2 & 50.70\% & 0.0033 \\
+Twitter-RoBERTa & 71.94\% & 0.0061 \\
+\bottomrule
+\end{tabular}
+\caption{Benchmark results for Kaggle Sentiment Analysis (mdismielhossenabir). Accuracy represents the maximum accuracy achieved across multiple runs; latency is the average inference time per sample.}
+\label{tab:benchmark-results-kaggle-sentiment}
+\end{table}
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.8\linewidth]{report_charts/report_accuracy_kaggle_sentiment_analysis_mdismielhossenabir.png}
+\caption{Accuracy chart for Kaggle Sentiment Analysis (mdismielhossenabir).}
+\label{fig:accuracy-kaggle-sentiment}
+\end{figure}
 
 \section{Discussion}
 Interpretation of the results, implications, and relation to previous research.
