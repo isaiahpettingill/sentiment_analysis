@@ -68,7 +68,9 @@ def _group_by_dataset(selected_runs: list[dict]) -> dict[str, list[dict]]:
     for row in selected_runs:
         grouped.setdefault(row["dataset_name"], []).append(row)
     for dataset_name in grouped:
-        grouped[dataset_name] = sorted(grouped[dataset_name], key=lambda item: item["model_name"])
+        grouped[dataset_name] = sorted(
+            grouped[dataset_name], key=lambda item: item["model_name"]
+        )
     return grouped
 
 
@@ -84,7 +86,9 @@ def _dataset_latency(rows: list[dict]) -> dict[str, float]:
     return {row["model_name"]: row["average_latency_seconds"] for row in rows}
 
 
-def _combined_accuracy(conn: sqlite3.Connection, run_ids: list[str]) -> dict[str, float]:
+def _combined_accuracy(
+    conn: sqlite3.Connection, run_ids: list[str]
+) -> dict[str, float]:
     placeholders = ",".join("?" for _ in run_ids)
     rows = conn.execute(
         f"""
@@ -114,7 +118,9 @@ def _combined_latency(conn: sqlite3.Connection, run_ids: list[str]) -> dict[str,
     return {str(model): float(lat) for model, lat in rows}
 
 
-def _dataset_grid_values(conn: sqlite3.Connection, rows: list[dict], models: list[str]) -> list[tuple[str, list[int]]]:
+def _dataset_grid_values(
+    conn: sqlite3.Connection, rows: list[dict], models: list[str]
+) -> list[tuple[str, list[int]]]:
     by_model: dict[str, list[int]] = {model: [] for model in models}
     for row in rows:
         pred_rows = conn.execute(
@@ -130,7 +136,9 @@ def _dataset_grid_values(conn: sqlite3.Connection, rows: list[dict], models: lis
     return [(model, by_model.get(model, [])) for model in models if by_model.get(model)]
 
 
-def _combined_grid_values(conn: sqlite3.Connection, selected_runs: list[dict], models: list[str]) -> list[tuple[str, list[int]]]:
+def _combined_grid_values(
+    conn: sqlite3.Connection, selected_runs: list[dict], models: list[str]
+) -> list[tuple[str, list[int]]]:
     sample_keys: set[tuple[str, int]] = set()
     prediction_map: dict[tuple[str, str, int], int] = {}
 
@@ -147,36 +155,74 @@ def _combined_grid_values(conn: sqlite3.Connection, selected_runs: list[dict], m
         for sample_index, is_correct in pred_rows:
             key = (row["dataset_name"], int(sample_index))
             sample_keys.add(key)
-            prediction_map[(row["dataset_name"], row["model_name"], int(sample_index))] = int(is_correct)
+            prediction_map[
+                (row["dataset_name"], row["model_name"], int(sample_index))
+            ] = int(is_correct)
 
     ordered_samples = sorted(sample_keys, key=lambda item: (item[0], item[1]))
     matrix: list[tuple[str, list[int]]] = []
     for model in models:
-        values = [prediction_map.get((dataset_name, model, sample_index), 0) for dataset_name, sample_index in ordered_samples]
+        values = [
+            prediction_map.get((dataset_name, model, sample_index), 0)
+            for dataset_name, sample_index in ordered_samples
+        ]
         if values:
             matrix.append((model, values))
     return matrix
 
 
-def _plot_bar(values: dict[str, float], title: str, y_label: str, output_path: Path) -> None:
+MODEL_COLORS = {
+    "Gemma 4 E2B": "#1f77b4",
+    "Qwen3.5 0.8B Q4": "#ff7f0e",
+    "Qwen3.5 2B Q4": "#2ca02c",
+    "Specialized: BERTweet Sentiment": "#d62728",
+    "Specialized: Reviews-SST2": "#9467bd",
+    "Specialized: Twitter-RoBERTa": "#8c564b",
+}
+
+
+def _plot_bar(
+    values: dict[str, float], title: str, y_label: str, output_path: Path
+) -> None:
     models = list(values.keys())
     y_values = [values[model] for model in models]
 
-    fig, ax = plt.subplots(figsize=(10, 6))
+    fig, ax = plt.subplots(figsize=(3.5, 2.5))
     x_positions = list(range(len(models)))
-    ax.bar(x_positions, y_values)
-    ax.set_title(title)
-    ax.set_ylabel(y_label)
+    bar_colors = [MODEL_COLORS.get(model, "#7f7f7f") for model in models]
+    bars = ax.bar(
+        x_positions,
+        y_values,
+        width=0.6,
+        color=bar_colors,
+    )
+    ax.set_title(title, fontsize=11, fontweight="bold")
+    ax.set_ylabel(y_label, fontsize=9)
     ax.set_xticks(x_positions)
-    ax.set_xticklabels(models, rotation=20, ha="right")
+    ax.set_xticklabels(models, rotation=25, ha="right", fontsize=8)
+    ax.tick_params(axis="y", labelsize=8)
     ax.grid(axis="y", alpha=0.2)
+    ax.set_ylim(0, max(y_values) * 1.1 if max(y_values) > 0 else 1)
+    for bar in bars:
+        height = bar.get_height()
+        ax.annotate(
+            f"{height:.2f}",
+            xy=(bar.get_x() + bar.get_width() / 2, height),
+            xytext=(0, 2),
+            textcoords="offset points",
+            ha="center",
+            va="bottom",
+            fontsize=7,
+        )
     fig.tight_layout()
     output_path.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(output_path, dpi=200)
     plt.close(fig)
 
 
-def _plot_grid(matrix_rows: list[tuple[str, list[int]]], title: str, output_path: Path) -> None:
+def _plot_grid(
+    matrix_rows: list[tuple[str, list[int]]], title: str, output_path: Path
+) -> None:
     if not matrix_rows:
         return
     max_len = max(len(values) for _, values in matrix_rows)
@@ -185,7 +231,9 @@ def _plot_grid(matrix_rows: list[tuple[str, list[int]]], title: str, output_path
 
     for y, (_, values) in enumerate(matrix_rows):
         for x, value in enumerate(values):
-            ax.scatter(x, y, marker="s", s=16, color="#2ca02c" if value == 1 else "#d62728")
+            ax.scatter(
+                x, y, marker="s", s=16, color="#2ca02c" if value == 1 else "#d62728"
+            )
 
     ax.set_title(title)
     ax.set_xlabel("Prompt index")
@@ -194,7 +242,10 @@ def _plot_grid(matrix_rows: list[tuple[str, list[int]]], title: str, output_path
     ax.set_xticks(list(range(0, max_len, max(1, math.ceil(max_len / 20)))))
     ax.grid(alpha=0.15)
     ax.legend(
-        handles=[Patch(color="#2ca02c", label="Correct (1)"), Patch(color="#d62728", label="Wrong (0)")],
+        handles=[
+            Patch(color="#2ca02c", label="Correct (1)"),
+            Patch(color="#d62728", label="Wrong (0)"),
+        ],
         loc="upper right",
     )
     fig.tight_layout()
@@ -203,7 +254,9 @@ def _plot_grid(matrix_rows: list[tuple[str, list[int]]], title: str, output_path
     plt.close(fig)
 
 
-def generate_report_charts(sqlite_path: Path, output_dir: Path, created_at: str | None) -> None:
+def generate_report_charts(
+    sqlite_path: Path, output_dir: Path, created_at: str | None
+) -> None:
     with sqlite3.connect(sqlite_path) as conn:
         selected = _selected_runs(conn, created_at)
         grouped = _group_by_dataset(selected)
