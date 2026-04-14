@@ -180,6 +180,12 @@ MODEL_COLORS = {
     "Specialized: Twitter-RoBERTa": "#8c564b",
 }
 
+DATASET_ALIASES = {
+    "Instagram Comments (test)": "Instagram",
+    "Kaggle Reviews (dolbokostya subset)": "Reviews",
+    "Kaggle Sentiment Analysis (mdismielhossenabir)": "Mixed Domain",
+}
+
 
 def _plot_bar(
     values: dict[str, float], title: str, y_label: str, output_path: Path
@@ -276,39 +282,40 @@ def generate_report_charts(
 
         for dataset_name, rows in grouped.items():
             slug = _slugify(dataset_name)
+            alias = DATASET_ALIASES.get(dataset_name, dataset_name)
             _plot_bar(
                 values=_dataset_accuracy(rows),
-                title=f"Accuracy by model: {dataset_name}",
+                title=f"Accuracy ({alias})",
                 y_label="Accuracy",
                 output_path=output_dir / f"report_accuracy_{slug}.png",
             )
             _plot_bar(
                 values=_dataset_latency(rows),
-                title=f"Compute cost (avg latency) by model: {dataset_name}",
-                y_label="Average latency per item (seconds)",
+                title=f"Latency ({alias})",
+                y_label="Latency (seconds)",
                 output_path=output_dir / f"report_compute_cost_{slug}.png",
             )
             _plot_grid(
                 matrix_rows=_dataset_grid_values(conn, rows, models),
-                title=f"Per-prompt correctness grid: {dataset_name}",
+                title=f"Correctness grid ({alias})",
                 output_path=output_dir / f"report_grid_{slug}.png",
             )
 
         _plot_bar(
             values=_combined_accuracy(conn, run_ids),
-            title="Accuracy by model: all datasets combined",
+            title="Accuracy (all datasets)",
             y_label="Accuracy",
             output_path=output_dir / "report_accuracy_all_datasets.png",
         )
         _plot_bar(
             values=_combined_latency(conn, run_ids),
-            title="Compute cost (avg latency) by model: all datasets combined",
-            y_label="Average latency per item (seconds)",
+            title="Latency (all datasets)",
+            y_label="Latency (seconds)",
             output_path=output_dir / "report_compute_cost_all_datasets.png",
         )
         _plot_grid(
             matrix_rows=_combined_grid_values(conn, selected, models),
-            title="Per-prompt correctness grid: all datasets combined",
+            title="Correctness grid (all datasets)",
             output_path=output_dir / "report_grid_all_datasets.png",
         )
 

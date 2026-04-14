@@ -52,7 +52,7 @@ Detailed description of the research design, data collection, and analysis metho
 \section{Results}
 Presentation of the findings, including tables, figures, and statistical analyses.
 
-\subsection{Instagram Comments (test) - 56 samples}
+\subsection{Instagram - 56 samples}
 
 \begin{table}[H]
 \centering
@@ -68,7 +68,7 @@ Reviews-SST2 & 46.43\% & 0.0035 \\
 Twitter-RoBERTa & 60.71\% & 0.0062 \\
 \bottomrule
 \end{tabular}
-\caption{Benchmark results for Instagram Comments (test). Accuracy represents the maximum accuracy achieved across multiple runs; latency is the average inference time per sample.}
+\caption{Benchmark results for Instagram dataset (56 samples).}
 \label{tab:benchmark-results-instagram}
 \end{table}
 
@@ -77,11 +77,20 @@ Twitter-RoBERTa & 60.71\% & 0.0062 \\
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.85\linewidth]{report_charts/report_accuracy_instagram_comments_test.png}
-\caption{Accuracy chart for Instagram Comments (test).}
+\caption{Accuracy by model for Instagram.}
 \label{fig:accuracy-instagram}
 \end{figure}
 
-\subsection{Kaggle Reviews (dolbokostya) - 2000 samples}
+\medskip
+
+\begin{figure}[H]
+\centering
+includegraphics[width=0.85\linewidth]{report_charts/report_compute_cost_instagram_comments_test.png}
+caption{Latency by model for Instagram.}
+\label{fig:latency-instagram}
+\end{figure}
+
+\subsection{Kaggle Reviews - 2000 samples}
 
 \begin{table}[H]
 \centering
@@ -97,7 +106,7 @@ Reviews-SST2 & 68.00\% & 0.0031 \\
 Twitter-RoBERTa & 65.00\% & 0.0060 \\
 \bottomrule
 \end{tabular}
-\caption{Benchmark results for Kaggle Reviews (dolbokostya). Accuracy represents the maximum accuracy achieved across multiple runs; latency is the average inference time per sample.}
+\caption{Benchmark results for Kaggle Reviews dataset (2000 samples).}
 \label{tab:benchmark-results-kaggle-reviews}
 \end{table}
 
@@ -105,12 +114,21 @@ Twitter-RoBERTa & 65.00\% & 0.0060 \\
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.85\linewidth]{report_charts/report_accuracy_kaggle_reviews_dolbokostya_subset.png}
-\caption{Accuracy chart for Kaggle Reviews (dolbokostya).}
+includegraphics[width=0.85\linewidth]{report_charts/report_accuracy_kaggle_reviews_dolbokostya_subset.png}
+caption{Accuracy by model for Kaggle Reviews.}
 \label{fig:accuracy-kaggle-reviews}
 \end{figure}
 
-\subsection{Kaggle Sentiment Analysis (mdismielhossenabir) - 499 samples}
+\medskip
+
+\begin{figure}[H]
+\centering
+includegraphics[width=0.85\linewidth]{report_charts/report_compute_cost_kaggle_reviews_dolbokostya_subset.png}
+caption{Latency by model for Kaggle Reviews.}
+\label{fig:latency-kaggle-reviews}
+\end{figure}
+
+\subsection{Mixed Domain - 499 samples}
 
 \begin{table}[H]
 \centering
@@ -126,7 +144,7 @@ Reviews-SST2 & 50.70\% & 0.0033 \\
 Twitter-RoBERTa & 71.94\% & 0.0061 \\
 \bottomrule
 \end{tabular}
-\caption{Benchmark results for Kaggle Sentiment Analysis (mdismielhossenabir). Accuracy represents the maximum accuracy achieved across multiple runs; latency is the average inference time per sample.}
+caption{Benchmark results for Kaggle Sentiment dataset (499 samples).}
 \label{tab:benchmark-results-kaggle-sentiment}
 \end{table}
 
@@ -135,8 +153,17 @@ Twitter-RoBERTa & 71.94\% & 0.0061 \\
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.85\linewidth]{report_charts/report_accuracy_kaggle_sentiment_analysis_mdismielhossenabir.png}
-\caption{Accuracy chart for Kaggle Sentiment Analysis (mdismielhossenabir).}
+caption{Accuracy by model for Kaggle Sentiment.}
 \label{fig:accuracy-kaggle-sentiment}
+\end{figure}
+
+\medskip
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\linewidth]{report_charts/report_compute_cost_kaggle_sentiment_analysis_mdismielhossenabir.png}
+caption{Latency by model for Kaggle Sentiment.}
+\label{fig:latency-kaggle-sentiment}
 \end{figure}
 
 \section{Discussion}
