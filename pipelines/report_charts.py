@@ -173,6 +173,7 @@ def _combined_grid_values(
 
 MODEL_COLORS = {
     "Gemma 4 E2B": "#1f77b4",
+    "Gemma 4 E4B Q4": "#17becf",
     "Qwen3.5 0.8B Q4": "#ff7f0e",
     "Qwen3.5 2B Q4": "#2ca02c",
     "Specialized: BERTweet Sentiment": "#d62728",

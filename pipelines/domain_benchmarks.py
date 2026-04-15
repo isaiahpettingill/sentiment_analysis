@@ -49,6 +49,13 @@ MODEL_SPECS = [
         domain="general",
     ),
     ModelSpec(
+        name="Gemma 4 E4B Q4",
+        kind="llm",
+        repo="unsloth/gemma-4-E4B-it-GGUF",
+        file="gemma-4-E4B-it-Q4_0.gguf",
+        domain="general",
+    ),
+    ModelSpec(
         name="Qwen3.5 0.8B Q4",
         kind="llm",
         repo="unsloth/Qwen3.5-0.8B-GGUF",
@@ -495,6 +502,7 @@ def run_all_domain_benchmarks(
     cache_dir: Path,
     sqlite_path: Path,
     selected_datasets: list[str],
+    model_specs: list[ModelSpec],
 ) -> dict:
     datasets = _load_selected_datasets(
         selected=selected_datasets,
@@ -505,9 +513,9 @@ def run_all_domain_benchmarks(
     _ensure_db(sqlite_path)
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    summary = {"datasets": {}, "models": [spec.name for spec in MODEL_SPECS]}
-    accuracy_for_plot = {spec.name: [] for spec in MODEL_SPECS}
-    latency_for_plot = {spec.name: [] for spec in MODEL_SPECS}
+    summary = {"datasets": {}, "models": [spec.name for spec in model_specs]}
+    accuracy_for_plot = {spec.name: [] for spec in model_specs}
+    latency_for_plot = {spec.name: [] for spec in model_specs}
     created_at = datetime.now(UTC).isoformat()
 
     for dataset_name, rows in datasets.items():
@@ -515,7 +523,7 @@ def run_all_domain_benchmarks(
         summary["datasets"][dataset_name] = {"samples": len(rows), "results": {}}
         grid_rows: list[tuple[str, list[int]]] = []
 
-        for spec in MODEL_SPECS:
+        for spec in model_specs:
             progress_label = f"{dataset_name} | {spec.name}"
             print(f"[model] {spec.name}")
             if spec.kind == "transformer":
@@ -632,7 +640,20 @@ def main() -> None:
         "--sqlite-path",
         default="/home/isaiahjp/repos/sentiment_analysis/results/benchmark_results.sqlite",
     )
+    parser.add_argument(
+        "--model",
+        action="append",
+        default=None,
+        help="Model name to benchmark. Repeat to include multiple models.",
+    )
     args = parser.parse_args()
+
+    selected_model_names = args.model or [spec.name for spec in MODEL_SPECS]
+    model_specs = [spec for spec in MODEL_SPECS if spec.name in selected_model_names]
+    if not model_specs:
+        raise ValueError(
+            f"No matching models for --model selection: {', '.join(selected_model_names)}"
+        )
 
     summary = run_all_domain_benchmarks(
         social_samples=args.samples,
@@ -640,6 +661,7 @@ def main() -> None:
         cache_dir=Path(args.cache_dir),
         sqlite_path=Path(args.sqlite_path),
         selected_datasets=[args.dataset],
+        model_specs=model_specs,
     )
     print(json.dumps(summary, ensure_ascii=False, indent=2))
 
