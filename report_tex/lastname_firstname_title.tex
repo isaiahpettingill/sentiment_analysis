@@ -21,7 +21,7 @@
 %\hyphenpenalty=10000
 %\exhyphenpenalty=10000
 
-\title{Blank Template for LING 581 Research Paper--Your Title Goes Here}
+\title{Comparing Small LLMs with Traditional Sentiment Analysis Models}
 
 \author{Isaiah Pettingill \\
   Linguistics 581, Section 002, Winter 2026 \\
@@ -35,17 +35,15 @@
 \maketitle
 
 \begin{abstract}
-A brief summary of the research, including the purpose, methods, results, and conclusions.
-
-[For your final paper submission, you may use an AI-generated summary of your manuscript \textit{for the Abstract section only} so long as you cite the proper AI attribution like this ~\cite{gpt53codex}.]
+This paper compares small open-weight LLMs with traditional sentiment models on short-text sentiment classification. Across the tested datasets, specialized BERT-based models generally performed best in their target domains, while small LLMs were more mixed in accuracy. Among the LLMs, Gemma 4 variants were the strongest overall and offered reasonable latency for low-compute settings. The results suggest specialized models are still the best default for narrow sentiment tasks, but small LLMs remain useful when broader cross-domain flexibility is needed~\cite{gpt53codex}.
 \end{abstract}
 
 \section{Introduction}
 Sentiment Analysis of free form text is useful across many domains. It is used for analyzing incoming consumer data through CX and EX touchpoints (such as employer ratings, consumer reviews, CSAT surveys, etc.), in the medical space, in mass-analyzing public sentiment on certain topics via social media, and in more complex flows that identify individual emotions. Numerical ratings are easy to process, but free-form text is traditionally harder to process with the possibility of being more useful.
 
-In recent years, both Specialized Sentiment Analysis Models and Large Language Models (LLMs) have become increasingly powerful and increasingly low-cost, to the point that they can be run on consumer hardware or cheap cloud compute at a much larger scale. Many current sentiment analysis models are built on the same transformers architecture that powers LLMs but are made to perform a single task with high accuracy and a smaller number of parameters. LLMs have a better understanding of language in general, and are often advocated for as a solution to the issues of nuanced sentiment analysis across domains. It can be cheaper to implement an LLM-based classification flow when the team doesn't have the expertise to train a specialized model on their domain and want general, good results without the overhead of specialization, however the compute costs of LLMs at a large scale may quickly overcome that.
+In recent years, both Specialized Sentiment Analysis Models and Large Language Models (LLMs) have become increasingly powerful and increasingly low-cost, to the point that they can be run on consumer hardware or cheap cloud compute at a much larger scale. Many current sentiment analysis models are built on the same transformers architecture that powers LLMs but are made to perform a single task with high accuracy and a smaller number of parameters. LLMs have a better understanding of language in general, and are often advocated for as a solution to the issues of nuanced sentiment analysis across domains. It can be cheaper to implement an LLM-based classification flow when the team doesn't have the expertise to train a specialized model on their domain and wants general, good results without the overhead of specialization; however, the compute costs of LLMs at a large scale may quickly overcome that.
 
-In the last few months, both Alibaba and Google have released competitive open-source LLMs that are on par with many leading models of similar weight classes. These models have intelligence comparable to or greater than GPT-4o at much smaller parameter sizes. In some cases, outperforming leading models on hallucinations and other metric.
+In the last few months, both Alibaba and Google have released competitive open-source LLMs that are on par with many leading models of similar weight classes. These models have intelligence comparable to or greater than GPT-4o at much smaller parameter sizes. In some cases, they outperform leading models on hallucinations and other metrics.
 
 \begin{figure}[H]
 \centering
@@ -68,31 +66,37 @@ In the last few months, both Alibaba and Google have released competitive open-s
 \label{fig:artificial-analysis-compute}
 \end{figure}
 
-This project focuses specifically on simple sentiment classification (POSITIVE, NEGATIVE, NEUTRAL).
-
 \section{Literature Review}
-Gupta's Comprehensive Study on Sentiment Analysis gives a good explanation of the state of affairs as of a few years ago during the emergence of GPT and BERT models for sentiment analysis as compared to CNNs and RNNs. The affects of sarcasm and irony are noted as unique challenges that maybe LLMs and others could help with. \cite{gupta2024comprehensive}
+Gupta's Comprehensive Study on Sentiment Analysis gives a good explanation of the state of affairs as of a few years ago during the emergence of GPT and BERT models for sentiment analysis as compared to CNNs and RNNs. The effects of sarcasm and irony are noted as unique challenges that LLMs and others could help with. \cite{gupta2024comprehensive}
 
-\subsection{Sentiment Analysis in the Era of LLMs: A Reality Check}\cite{zhang2024realitycheck}
+Other research has performed similar experiments, but largely on older or significantly heavier LLMs. \cite{zhang2024realitycheck} Other research exists for so-called LLMs, but considers even models like BERT to be LLMs. \cite{dave2023finetunedllms} This paper considers BERT and roBERTa and GPT-like transformers separately.
 
-\subsection{Fine-tuned LLMs for Sentiment Prediction}\cite{dave2023finetunedllms}
+A vast array of sources online sell various products for sentiment analysis, promise gains from LLM usage in sentiment analysis, or give tutorials for how to perform sentiment analysis through various methods. \cite{burchell2024llmssentiment}
 
-\subsection{How to Do Sentiment Analysis With LLMs}\cite{burchell2024llmssentiment}
+There is an academic interest in sentiment analysis, especially as it concerns the medical field and the public sentiment on certain topics, such as vaccines and other public health issues. \cite{gandy2025publichealth}
+Various groups have taken large amounts of social media data and applied LLMs and other models to that data to try to determine public sentiment on various issues. There have been attempts at using models like GPT-3.5, GPT-4, Claude-3s, Llama 2, and others.
+\cite{annan2025vaccine}
 
-\subsection{Public Health Discussions on Social Media}\cite{gandy2025publichealth}
+Significantly, in many of these studies, the specialized models (such as fine-tuned BERT) perform better on their specific domains than larger LLMs available when they were tested. \cite{elmitwalli2024cop9} Yet others have found that LLMs perform well, but with significant compute costs. \cite{medrxiv2024preprint}
 
-\subsection{LLMs for Vaccine Sentiment and Hesitancy}\cite{annan2025vaccine}
+In lower resource languages especially, LLMs seem to be lacking compared to lexicon-based approaches and other more traditional machine learning techniques. \cite{kandala2025llmsvstraditional}
 
-\subsection{COP9 Tweet Sentiment Analysis}\cite{elmitwalli2024cop9}
+In a business-oriented paper in 2024, researchers discovered that LLMs perform better on larger texts, while smaller, more specialized models performed better on smaller chunks of text. \cite{mdpi2024article}
 
-\subsection{LLMs vs. Traditional Sentiment Tools in Psychology}\cite{kandala2025llmsvstraditional}
-
-\subsection{medRxiv Source}\cite{medrxiv2024preprint}
-
-\subsection{MDPI Source}\cite{mdpi2024article}
+In light of the previous research in the last two years, this paper attempts to test state-of-the-art low-compute LLMs in the role of sentiment analysis where larger LLMs may be prohibitively expensive to run.
 
 \section{Methodology}
-We benchmarked six sentiment models: Gemma 4 E2B \cite{gemma4}, Qwen3.5 0.8B Q4 and Qwen3.5 2B Q4 \cite{qwen35}, BERTweet Sentiment \cite{bertweet}, Reviews-SST2 \cite{socher2013recursive}, and Twitter-RoBERTa \cite{barbieri2020tweeteval}. Evaluation used three datasets: Instagram comments (56 samples), Kaggle Reviews (2000 samples), and a mixed-domain Kaggle Sentiment set (499 samples). The Kaggle movie-review data is based on the Large Movie Review Dataset (IMDb) \cite{maas2011learning}.
+We benchmarked seven sentiment models: Gemma 4 E2B, Gemma 4 E4B \cite{gemma4}, Qwen3.5 0.8B Q4 and Qwen3.5 2B Q4 \cite{qwen35}, BERTweet Sentiment \cite{bertweet}, Reviews-SST2 \cite{socher2013recursive}, and Twitter-RoBERTa \cite{barbieri2020tweeteval}. Evaluation used three datasets: Instagram comments (56 samples), the Reviews set (2000 samples), and the Mixed Domain set (499 samples). The movie-review data in the Reviews set is based on the Large Movie Review Dataset (IMDb) \cite{maas2011learning}.
+
+Each model was run against the same public, labelled datasets and graded based on how many of the predictions matched the labels. The data was then aggregated into graphs and charts for easy processing.
+
+For LLM-enabled sentiment analysis, each input was scored with a fixed prompt: "Classify the sentiment of this text as POSITIVE, NEGATIVE, or NEUTRAL. Reply with exactly one label: POSITIVE, NEGATIVE, or NEUTRAL." This instruction was followed by the text payload in the form "Text: <input text>" and a final cue "Label:" to elicit a single-class output.
+
+For BERT-based models, the native label outputs were normalized to the shared evaluation scheme. Specifically, outputs such as LABEL\_0/LABEL\_1/LABEL\_2, negative/neutral/positive variants, and star-style ratings were mapped to NEGATIVE/NEUTRAL/POSITIVE before scoring. The original model output was still retained in the logged raw prediction field.
+
+The RoBERTa, BERT, and much older SST models represent more traditional, low-compute solutions. Qwen3.5 and Gemma4 models serve as the latest high-quality small models that run with minimal compute. The Qwen models are significantly heavier than the Gemma models, but were included to avoid biasing the study specifically to Google models.
+
+The repository containing the code for this project is available on GitHub. \cite{sentimentanalysisrepo}. The result sets are available under the Releases section.
 
 \section{Results}
 Presentation of the findings, including tables, figures, and statistical analyses.
@@ -106,6 +110,7 @@ Presentation of the findings, including tables, figures, and statistical analyse
 \textbf{Model} & \textbf{Accuracy} & \textbf{Latency (s)} \\
 \midrule
 Gemma 4 E2B & 60.71\% & 0.0930 \\
+Gemma 4 E4B Q4 & 53.57\% & 0.1003 \\
 Qwen3.5 0.8B Q4 & 28.57\% & 0.2128 \\
 Qwen3.5 2B Q4 & 28.57\% & 0.5344 \\
 BERTweet Sentiment & 60.71\% & 0.0081 \\
@@ -119,19 +124,19 @@ Twitter-RoBERTa & 60.71\% & 0.0062 \\
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.85\linewidth]{report_charts/report_accuracy_instagram_comments_test.png}
+\includegraphics[width=1\linewidth]{report_charts/report_accuracy_instagram_comments_test.png}
 \caption{Accuracy by model for Instagram.}
 \label{fig:accuracy-instagram}
 \end{figure}
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.85\linewidth]{report_charts/report_compute_cost_instagram_comments_test.png}
+\includegraphics[width=1\linewidth]{report_charts/report_compute_cost_instagram_comments_test.png}
 \caption{Latency by model for Instagram.}
 \label{fig:latency-instagram}
 \end{figure}
 
-\subsection{Kaggle Reviews - 2000 samples}
+\subsection{Reviews - 2000 samples}
 
 \begin{table}[H]
 \centering
@@ -140,6 +145,7 @@ Twitter-RoBERTa & 60.71\% & 0.0062 \\
 \textbf{Model} & \textbf{Accuracy} & \textbf{Latency (s)} \\
 \midrule
 Gemma 4 E2B & 63.00\% & 0.0851 \\
+Gemma 4 E4B Q4 & 70.00\% & 0.1029 \\
 Qwen3.5 0.8B Q4 & 65.00\% & 0.1559 \\
 Qwen3.5 2B Q4 & 65.00\% & 0.3159 \\
 BERTweet Sentiment & 63.00\% & 0.0060 \\
@@ -147,21 +153,21 @@ Reviews-SST2 & 68.00\% & 0.0031 \\
 Twitter-RoBERTa & 65.00\% & 0.0060 \\
 \bottomrule
 \end{tabular}
-\caption{Benchmark results for Kaggle Reviews dataset (2000 samples).}
+\caption{Benchmark results for the Reviews set (2000 samples).}
 \label{tab:benchmark-results-kaggle-reviews}
 \end{table}
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.85\linewidth]{report_charts/report_accuracy_kaggle_reviews_dolbokostya_subset.png}
-\caption{Accuracy by model for Kaggle Reviews.}
+\includegraphics[width=1\linewidth]{report_charts/report_accuracy_kaggle_reviews_dolbokostya_subset.png}
+\caption{Accuracy by model for the Reviews set.}
 \label{fig:accuracy-kaggle-reviews}
 \end{figure}
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.85\linewidth]{report_charts/report_compute_cost_kaggle_reviews_dolbokostya_subset.png}
-\caption{Latency by model for Kaggle Reviews.}
+\includegraphics[width=1\linewidth]{report_charts/report_compute_cost_kaggle_reviews_dolbokostya_subset.png}
+\caption{Latency by model for the Reviews set.}
 \label{fig:latency-kaggle-reviews}
 \end{figure}
 
@@ -174,6 +180,7 @@ Twitter-RoBERTa & 65.00\% & 0.0060 \\
 \textbf{Model} & \textbf{Accuracy} & \textbf{Latency (s)} \\
 \midrule
 Gemma 4 E2B & 73.21\% & 0.0976 \\
+Gemma 4 E4B Q4 & 69.94\% & 0.0940 \\
 Qwen3.5 0.8B Q4 & 33.87\% & 0.2421 \\
 Qwen3.5 2B Q4 & 32.26\% & 0.4828 \\
 BERTweet Sentiment & 71.94\% & 0.0059 \\
@@ -181,21 +188,21 @@ Reviews-SST2 & 50.70\% & 0.0033 \\
 Twitter-RoBERTa & 71.94\% & 0.0061 \\
 \bottomrule
 \end{tabular}
-\caption{Benchmark results for Kaggle Sentiment dataset (499 samples).}
+\caption{Benchmark results for the Mixed Domain set (499 samples).}
 \label{tab:benchmark-results-kaggle-sentiment}
 \end{table}
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.85\linewidth]{report_charts/report_accuracy_kaggle_sentiment_analysis_mdismielhossenabir.png}
-\caption{Accuracy by model for Kaggle Sentiment.}
+\includegraphics[width=1\linewidth]{report_charts/report_accuracy_kaggle_sentiment_analysis_mdismielhossenabir.png}
+\caption{Accuracy by model for the Mixed Domain set.}
 \label{fig:accuracy-kaggle-sentiment}
 \end{figure}
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.85\linewidth]{report_charts/report_compute_cost_kaggle_sentiment_analysis_mdismielhossenabir.png}
-\caption{Latency by model for Kaggle Sentiment.}
+\includegraphics[width=1\linewidth]{report_charts/report_compute_cost_kaggle_sentiment_analysis_mdismielhossenabir.png}
+\caption{Latency by model for the Mixed Domain set.}
 \label{fig:latency-kaggle-sentiment}
 \end{figure}
 
@@ -203,7 +210,22 @@ Twitter-RoBERTa & 71.94\% & 0.0061 \\
 Interpretation of the results, implications, and relation to previous research.
 
 \section{Conclusion}
-Summary of the main findings, limitations of the study, and suggestions for future research.
+The LLMs in my experiment did not perform significantly better than the specialized models. However, it should be noted that all data in the benchmark consisted of small chunks of text and the LLM was given minimal context about where the chunks of text appeared. In light of that limitation, the LLMs (especially Gemma 4) performed remarkably well.
+
+\subsection{Findings}
+I found that BERT-based specialized sentiment analysis models generally performed better on datasets within their domain than the LLMs I chose for this test. The Gemma 4 variants displayed promising latency compared to LLMs used for similar tasks in other literature with surprisingly high results, especially across mixed domains of sentiment analysis.
+
+\subsection{Limitations}
+This project focuses specifically on simple sentiment classification (POSITIVE, NEGATIVE, NEUTRAL).
+
+This project used very small and limited subsets of publicly available data. A better benchmark would have more samples of better curated data across multiple domains, domain-specific prompting for the LLMs, and fine-tuning of both sentiment models and LLMs on target domains.
+
+The metrics used for cost were just seconds of compute on my computer, which can be affected by factors other than the model (such as operating system cycles and other processes in the background). Better metrics of cost could be devised if this were considered in a business situation.
+
+\subsection{Future Research}
+A more comprehensive project would involve extracting specific sentiments, including stronger prompting for the LLMs, and fine-tuning Gemma 4 for sentiment analysis. A better task for an LLM might involve broader or more specific categories, identifying sentiment about specific topics, or identifying if negative sentiment is directed at an individual or organization to augment rather than replace existing sentiment analysis models in the market. For example, if traditional sentiment analysis is used to identify negative posts, an LLM could be applied to the negative ones with more context to determine if the post represents targeted hostility or simply frustration about a situation in general. Such a flow could be useful for businesses to determine what aspects of their business need to improve or which employees are struggling the most with customers by bringing to their attention themes and specific feelings amidst noise of mixed-sentiment comments.
+
+Other projects might involve attempting to use Gemma 4 in more domain-specific contexts that involve longer text or require some level of reasoning about the context of the comment. Taking some of the sources in the literature review and replicating their experiments with these newer models may yield more promising results for the cost.
 
 % This will automatically generate the References section. You do not need to add a References section manually.
 %\nocite{*}
