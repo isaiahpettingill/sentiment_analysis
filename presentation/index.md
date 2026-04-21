@@ -35,38 +35,41 @@ Motivation for this project
 
 <!-- column_layout: [1, 2] -->
 <!-- column: 0 -->
-![ML.NET Robot](images/dotnet-robot.png)
+![image:width:45%](images/dotnet-robot.png)
 <!-- column: 1 -->
 
 - ML.NET in 2018
 - Following tutorials for Amazon Reviews dataset to train a classical Sentiment Analysis Model
-
+- Used it to build a mini dialog for a video game that I never finished
 <!-- reset_layout -->
 
 <!-- pause -->
 ## Game
 
+<!-- column_layout: [1, 1, 1] -->
+<!--column: 0-->
 ```bash
 $ dotnet run SentimentAnalysisGame
 ...
 ```
 <!-- pause -->
 
-<!-- column_layout: [1, 1] -->
-<!--column: 0-->
 ```
 A Wizard stops you and says, "How are you doing?"
 
 What do you say?
 > ...
 ```
+<!-- column: 1 -->
 <!-- pause -->
+
+> the algorithm scores the sentiment on a scale from -1.0 (NEGATIVE) to 1.0 (POSITIVE)
 ```
 > I feel rather sick
 
 The wizard frowns. "I am sorry you feel that way"
 ```
-<!--column: 1-->
+<!--column: 2-->
 
 <!-- pause -->
 ```csharp
@@ -103,24 +106,23 @@ Is it worth it to use an LLM for sentiment analysis?
 
 ## The LLM that sparked the question
 
-<!-- column_layout: [1, 1] -->
+<!-- column_layout: [1, 2, 2] -->
 <!-- column: 0 -->
-![Gemma](images/Gemma.png)
+![image](images/Gemma.png)
 <!-- column: 1 -->
 ### Google Gemma 4
-
 - Large model with small amount of active parameters
 - Can run on my Intel Laptop (no dedicated GPU)
 - Performs better than GPT-4 on a lot of benchmarks
-
+- Most papers use older models or much heavier, more expensive models.
 
 <!-- pause -->
-
-![results](images/humanityslastexam.png)
+<!-- column: 2 -->
+![image](images/humanityslastexam.png)
 
 <!-- end_slide -->
 
-![results](images/model-ranking.png)
+![image:width:75%](images/model-ranking.png)
 <!-- column_layout: [1, 1] -->
 <!-- column: 0 -->
 ![results](images/mmmu.png)
@@ -135,8 +137,8 @@ Methodology
 
 ![image:width:50%](images/huggingface.jpg)
 
-- Pulled some sentiment analysis models from huggingface
-- Pulled some labelled datasets from Kaggle and huggingface across various domains (Social media, reviews, a mixed-domain dataset)
+- Pulled some sentiment analysis models from huggingface.
+- Pulled some labelled datasets from Kaggle and huggingface across various domains (Social media, reviews, a mixed-domain dataset, ~1500 data points)
 - Tested Gemma 4, Qwen 3.5, and two BERT-based models, and one SST model across various domains, comparing their outputs to the lavels in the dataset
 
 <!-- end_slide -->
@@ -158,10 +160,10 @@ Results
 - In many cases, Gemma 4 did perform better, but in almost all cases Qwen 3.5 performed worse
 <!--pause-->
 - Even for small models, the latency of a traditional model for small data compared to the cost of running the small model makes the specialized model almost always the better choice, especially in domain-specific small-text situations.
-<!--pause-->
+<!--end_slide-->
 ## So what?
 
-### In this case, we can say the following
+### From my testing
 | LLM | Specialized Model |
 |--|--|
 | Better at question answering | Better for low latency simple classification |
@@ -180,9 +182,18 @@ More results
 ![](images/report_accuracy_instagram_comments_test.png)
 
 <!-- end_slide -->
-
-Follow-up research
+Limitations and Follow-Up
 ===
+
+# Limitations
+
+- Needs more benchmarking and testing to be definitive
+- Needs to test more kinds of situations, more kinds of prompting
+- Sentiment analysis with small context doesn't use the greatest strength of an LLM, which is contextual understanding.
+
+<!-- pause -->
+# Follow-up research
+
 
 This experiment tested LLMs at zero-shot sentiment classification of small texts.
 
