@@ -86,7 +86,7 @@ In a business-oriented paper in 2024, researchers discovered that LLMs perform b
 In light of the previous research in the last two years, this paper attempts to test state-of-the-art low-compute LLMs in the role of sentiment analysis where larger LLMs may be prohibitively expensive to run.
 
 \section{Methodology}
-We benchmarked seven sentiment models: Gemma 4 E2B, Gemma 4 E4B \cite{gemma4}, Qwen3.5 0.8B Q4 and Qwen3.5 2B Q4 \cite{qwen35}, BERTweet Sentiment \cite{bertweet}, Reviews-SST2 \cite{socher2013recursive}, and Twitter-RoBERTa \cite{barbieri2020tweeteval}. Evaluation used three datasets: Instagram comments (56 samples), the Reviews set (2000 samples), and the Mixed Domain set (499 samples). The movie-review data in the Reviews set is based on the Large Movie Review Dataset (IMDb) \cite{maas2011learning}.
+We benchmarked seven sentiment models: Gemma 4 E2B, Gemma 4 E4B \cite{gemma4}, Qwen3.5 0.8B Q4 and Qwen3.5 2B Q4 \cite{qwen35}, BERTweet Sentiment \cite{bertweet}, Reviews-SST2 \cite{socher2013recursive}, and Twitter-RoBERTa \cite{barbieri2020tweeteval}. Evaluation used three datasets: Instagram comments (56 samples), the Reviews set (500 samples), and the Mixed Domain set (499 samples). The movie-review data in the Reviews set is based on the Large Movie Review Dataset (IMDb) \cite{maas2011learning}.
 
 Each model was run against the same public, labelled datasets and graded based on how many of the predictions matched the labels. The data was then aggregated into graphs and charts for easy processing.
 
@@ -136,7 +136,7 @@ Twitter-RoBERTa & 60.71\% & 0.0062 \\
 \label{fig:latency-instagram}
 \end{figure}
 
-\subsection{Reviews - 2000 samples}
+\subsection{Reviews - 500 samples}
 
 \begin{table}[H]
 \centering
@@ -153,7 +153,7 @@ Reviews-SST2 & 68.00\% & 0.0031 \\
 Twitter-RoBERTa & 65.00\% & 0.0060 \\
 \bottomrule
 \end{tabular}
-\caption{Benchmark results for the Reviews set (2000 samples).}
+\caption{Benchmark results for the Reviews set (500 samples).}
 \label{tab:benchmark-results-kaggle-reviews}
 \end{table}
 
